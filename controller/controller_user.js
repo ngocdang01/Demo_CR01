@@ -36,7 +36,78 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
+// Đăng nhập
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log("Login attempt for email:", email);
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
+    }
+
+    // Tìm user theo email
+    const user = await User.findOne({ email });
+    console.log("User found:", user ? "Yes" : "No");
+
+    if (!user) {
+      console.log("No user found with email:", email);
+      return res
+        .status(401)
+        .json({ message: "Email hoặc mật khẩu không đúng" });
+    }
+
+    // Kiểm tra mật khẩu
+    console.log("Comparing passwords...");
+    console.log("Stored password hash:", user.password);
+    console.log("Attempting to compare with:", password);
+
+    try {
+      const isMatch = await bcrypt.compare(password, user.password);
+      console.log("Password match:", isMatch);
+
+      if (!isMatch) {
+        console.log("Password does not match for user:", email);
+        return res
+          .status(401)
+          .json({ message: "Email hoặc mật khẩu không đúng" });
+      }
+
+      // Tạo JWT token
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET || "your-secret-key",
+        { expiresIn: "24h" }
+      );
+
+      console.log("Login successful for user:", email);
+
+      res.json({
+        message: "Đăng nhập thành công",
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          phone: user.phone,
+          role: user.role,
+          address: user.address,
+          sex: user.sex,
+        },
+      });
+    } catch (compareError) {
+      console.error("Password comparison error:", compareError);
+      res.status(500).json({
+        message: "Lỗi xác thực mật khẩu",
+        error: compareError.message,
+      });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
 // Logout(Đăng xuất)
 exports.logout = async (req, res) => {
   // Chỉ trả về thông báo, client sẽ tự xóa token
