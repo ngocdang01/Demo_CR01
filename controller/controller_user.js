@@ -1,5 +1,7 @@
 const User = require("../model/model_user");
-const bcrypt = require("bcrypt");
+
+
+
 const jwt = require("jsonwebtoken");
 
 // Đăng ký tài khoản mới
@@ -113,3 +115,4 @@ exports.logout = async (req, res) => {
   // Chỉ trả về thông báo, client sẽ tự xóa token
   res.json({ message: "Đăng xuất thành công" });
 };
+https://github.com/ngocdang01/Demo_CR01/commit/cb84bfb556f94b686b03b2e413f686e06e6fb1a0
